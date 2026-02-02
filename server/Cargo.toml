@@ -1,0 +1,6 @@
+[package]
+name = "ludi-stream-server"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]

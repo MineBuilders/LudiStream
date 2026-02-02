@@ -13,7 +13,7 @@ option_end()
 
 target("ludi-stream-client")
     add_rules("@levibuildscript/linkrule")
-    add_rules("@levibuildscript/modpacker")
+    add_rules("levilamina-mod-packer")
     add_cxflags( "/EHa", "/utf-8", "/W4", "/w44265", "/w44289", "/w44296", "/w45263", "/w44738", "/w45204")
     add_defines("NOMINMAX", "UNICODE", "LL_PLAT_C")
     add_packages("levilamina")
