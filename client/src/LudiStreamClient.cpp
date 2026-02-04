@@ -1,6 +1,7 @@
 #include "LudiStreamClient.h"
 
 #include "ll/api/mod/RegisterHelper.h"
+#include "ui/ImGui.h"
 
 namespace ludistream {
 
@@ -11,11 +12,7 @@ LudiStreamClient& LudiStreamClient::getInstance() {
 
 bool LudiStreamClient::load() const {
     getSelf().getLogger().debug("Loading...");
-    return true;
-}
-
-bool LudiStreamClient::enable() const {
-    getSelf().getLogger().debug("Enabling...");
+    ui::prepareImGui();
     return true;
 }
 

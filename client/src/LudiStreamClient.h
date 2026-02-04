@@ -16,8 +16,8 @@ public:
     /// @return True if the mod is loaded successfully.
     [[nodiscard]] bool load() const;
 
-    /// @return True if the mod is enabled successfully.
-    [[nodiscard]] bool enable() const;
+    // /// @return True if the mod is enabled successfully.
+    // [[nodiscard]] bool enable() const;
 
     // /// @return True if the mod is disabled successfully.
     // [[nodiscard]] bool disable() const;
