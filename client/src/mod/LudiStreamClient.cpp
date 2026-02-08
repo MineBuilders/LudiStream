@@ -1,7 +1,7 @@
 #include "LudiStreamClient.h"
 
 #include "ll/api/mod/RegisterHelper.h"
-#include "ui/ImGui.h"
+#include "mod/ui/ImGui.h"
 
 namespace ludistream {
 
