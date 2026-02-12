@@ -14,7 +14,9 @@
 #include "mc/deps/core/container/Blob.h"
 #include "mc/deps/core/file/PathView.h"
 #include "mc/deps/core_graphics/ImageDescription.h"
+#include "mc/deps/input/HIDController.h"
 #include "mc/deps/input/MouseDevice.h"
+#include "mc/deps/input/win32/HIDControllerWin32.h"
 #include "mc/deps/minecraft_renderer/renderer/TexturePtr.h"
 // ReSharper disable once CppUnusedIncludeDirective
 #include "mc/deps/minecraft_renderer/resources/ClientTexture.h"
@@ -104,6 +106,49 @@ static void initImGui(UIRenderContext& context) {
     init();
 }
 
+static void updateMouseCursor() {
+    const auto imguiCursor = ImGui::GetMouseCursor();
+    if (imguiCursor == ImGuiMouseCursor_None || ImGui::GetIO().MouseDrawCursor) {
+        SetCursor(nullptr);
+        return;
+    }
+
+    HCURSOR cursor = nullptr;
+    switch (imguiCursor) {
+    case ImGuiMouseCursor_Arrow:
+        cursor = LoadCursor(nullptr, IDC_ARROW);
+        break;
+    case ImGuiMouseCursor_TextInput:
+        cursor = LoadCursor(nullptr, IDC_IBEAM);
+        break;
+    case ImGuiMouseCursor_ResizeAll:
+        cursor = LoadCursor(nullptr, IDC_SIZEALL);
+        break;
+    case ImGuiMouseCursor_ResizeEW:
+        cursor = LoadCursor(nullptr, IDC_SIZEWE);
+        break;
+    case ImGuiMouseCursor_ResizeNS:
+        cursor = LoadCursor(nullptr, IDC_SIZENS);
+        break;
+    case ImGuiMouseCursor_ResizeNESW:
+        cursor = LoadCursor(nullptr, IDC_SIZENESW);
+        break;
+    case ImGuiMouseCursor_ResizeNWSE:
+        cursor = LoadCursor(nullptr, IDC_SIZENWSE);
+        break;
+    case ImGuiMouseCursor_Hand:
+        cursor = LoadCursor(nullptr, IDC_HAND);
+        break;
+    case ImGuiMouseCursor_NotAllowed:
+        cursor = LoadCursor(nullptr, IDC_NO);
+        break;
+    default:
+        cursor = LoadCursor(nullptr, IDC_ARROW);
+        break;
+    }
+    SetCursor(cursor);
+}
+
 inline void setTessellatorColor(const ImU32 c) {
     constexpr float inv255 = 1.0f / 255.0f;
     tessellator->color(
@@ -181,6 +226,7 @@ static void renderImGui(UIRenderContext& context) {
             );
             context.restoreSavedClippingRectangle();
         }
+    updateMouseCursor();
 }
 
 LL_AUTO_TYPE_INSTANCE_HOOK(
@@ -275,6 +321,118 @@ LL_AUTO_STATIC_HOOK(
     default:;
     }
     return origin(hwnd, uMsg, wParam, lParam);
+}
+
+static ImGuiKey virtualKeyToImGuiKey(const int vk) {
+    if (vk >= 'A' && vk <= 'Z') return static_cast<ImGuiKey>(ImGuiKey_A + (vk - 'A'));
+    if (vk >= '0' && vk <= '9') return static_cast<ImGuiKey>(ImGuiKey_0 + (vk - '0'));
+    switch (vk) {
+    case VK_SPACE:
+        return ImGuiKey_Space;
+    case VK_RETURN:
+        return ImGuiKey_Enter;
+    case VK_ESCAPE:
+        return ImGuiKey_Escape;
+    case VK_TAB:
+        return ImGuiKey_Tab;
+    case VK_BACK:
+        return ImGuiKey_Backspace;
+
+    case VK_LEFT:
+        return ImGuiKey_LeftArrow;
+    case VK_RIGHT:
+        return ImGuiKey_RightArrow;
+    case VK_UP:
+        return ImGuiKey_UpArrow;
+    case VK_DOWN:
+        return ImGuiKey_DownArrow;
+
+    case VK_SHIFT:
+        return ImGuiKey_LeftShift;
+    case VK_CONTROL:
+        return ImGuiKey_LeftCtrl;
+    case VK_MENU:
+        return ImGuiKey_LeftAlt;
+
+    default:
+        return ImGuiKey_None;
+    }
+}
+
+LL_AUTO_TYPE_INSTANCE_HOOK(
+    HIDControllerOnKeyDown,
+    ll::memory::HookPriority::Normal,
+    HIDController,
+    &HIDController::$onKeyDown,
+    void,
+    int keyCode
+) {
+    auto&      io  = ImGui::GetIO();
+    const auto key = virtualKeyToImGuiKey(keyCode);
+    if (key != ImGuiKey_None) io.AddKeyEvent(key, true);
+    switch (key) {
+    case ImGuiKey_LeftCtrl:
+    case ImGuiKey_RightCtrl:
+        io.AddKeyEvent(ImGuiMod_Ctrl, true);
+        break;
+    case ImGuiKey_LeftShift:
+    case ImGuiKey_RightShift:
+        io.AddKeyEvent(ImGuiMod_Shift, true);
+        break;
+    case ImGuiKey_LeftAlt:
+    case ImGuiKey_RightAlt:
+        io.AddKeyEvent(ImGuiMod_Alt, true);
+        break;
+    default:
+        break;
+    }
+    if (io.WantCaptureKeyboard) return;
+    return origin(keyCode);
+}
+
+LL_AUTO_TYPE_INSTANCE_HOOK(
+    HIDControllerWin32OnKeyUp,
+    ll::memory::HookPriority::Normal,
+    HIDControllerWin32,
+    &HIDControllerWin32::$onKeyUp,
+    void,
+    int keyCode
+) {
+    auto&      io  = ImGui::GetIO();
+    const auto key = virtualKeyToImGuiKey(keyCode);
+    if (key != ImGuiKey_None) io.AddKeyEvent(key, false);
+    switch (key) {
+    case ImGuiKey_LeftCtrl:
+    case ImGuiKey_RightCtrl:
+        io.AddKeyEvent(ImGuiMod_Ctrl, false);
+        break;
+    case ImGuiKey_LeftShift:
+    case ImGuiKey_RightShift:
+        io.AddKeyEvent(ImGuiMod_Shift, false);
+        break;
+    case ImGuiKey_LeftAlt:
+    case ImGuiKey_RightAlt:
+        io.AddKeyEvent(ImGuiMod_Alt, false);
+        break;
+    default:
+        break;
+    }
+    if (io.WantCaptureKeyboard) return;
+    return origin(keyCode);
+}
+
+LL_AUTO_TYPE_INSTANCE_HOOK(
+    HIDControllerWin32OnTextInput,
+    ll::memory::HookPriority::Normal,
+    HIDControllerWin32,
+    &HIDControllerWin32::$onTextInput,
+    void,
+    ::std::string const& utf8Text
+) {
+    auto& io = ImGui::GetIO();
+    io.AddInputCharactersUTF8(utf8Text.c_str());
+    if (io.WantCaptureKeyboard) return;
+    return origin(utf8Text);
 }
 
 void prepareImGui() {
