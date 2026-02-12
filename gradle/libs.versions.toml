@@ -1,0 +1,9 @@
+[versions]
+kotlin = "2.3.10"
+allaymc-gradle = "0.2.1"
+
+[libraries]
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+allaymc-gradle = { id = "org.allaymc.gradle.plugin", version.ref = "allaymc-gradle" }

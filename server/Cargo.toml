@@ -1,6 +1,15 @@
 [package]
-name = "ludi-stream-server"
+name = "ludi-stream-server-core"
 version.workspace = true
 edition.workspace = true
 
+[lib]
+# FFI # crate-type = ["staticlib"]
+# JNI # crate-type = ["cdylib"]
+
+[features]
+ffi = []
+jni = ["dep:jni"]
+
 [dependencies]
+jni = { version = "0.21.1", optional = true }

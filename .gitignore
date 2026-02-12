@@ -10,3 +10,9 @@
 
 # Cargo
 /target/
+
+# Gradle
+/.gradle/
+build/
+local.properties
+/.kotlin/
