@@ -88,7 +88,17 @@ static void initImGui(UIRenderContext& context) {
     style.AntiAliasedFill  = false;
     const auto& io         = ImGui::GetIO();
     // io.Fonts->AddFontDefault();
-    io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\msyh.ttc)", 80.0f, nullptr);
+    static ImVector<ImWchar> ranges;
+    ImFontGlyphRangesBuilder builder;
+    builder.AddRanges(io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+    // builder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
+    builder.BuildRanges(&ranges);
+    io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\msyh.ttc)", 80.0f, nullptr, ranges.Data);
+
+    // TODO: 上传超大 range 字形的 texture 会很吃显存！
+    // TODO: 缩小字号，80.0f 太大了
+    // TODO: builder.AddText(u8"在这里写会用到的字！就只会加载这些字到 texture！");
+    // TODO: 将添加字体的代码提到 RenderLoop::init 里面，并让 init 先于 loadFontTexture 执行
 
     loadFontTexture(context);
     init();
@@ -112,7 +122,7 @@ static void renderImGui(UIRenderContext& context) {
     io.DisplaySize.x            = totalScreenSize.x;
     io.DisplaySize.y            = totalScreenSize.y;
     // io.FontGlobalScale          = scale * 0.6f;
-    io.FontGlobalScale = scale * 0.6f / (/* fontSize */ 80.0f / 16.0f);
+    io.FontGlobalScale = scale * 0.6f / (/* fontSize */ 80.0f / 16.0f); // TODO: 别忘记这里也有 fontSize
     ImGui::NewFrame();
 
     render();
